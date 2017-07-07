@@ -28,12 +28,15 @@ import android.widget.Toast;
 import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
 
+import java.util.ArrayList;
+
 public class MainActivity extends AppCompatActivity {
     TextView posiciones;
     ImageView routerImg;
     int grades = 0;
     int posicion = 0;
     double intensidades[] = new double[8];
+    ArrayList<Integer> intensidades2 = new ArrayList<>();
     Button manualButton;
     Button mainButton;
     Button autoButton;
@@ -57,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
     public void activar(View view) {
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(MainActivity.this);
         alertDialog.setTitle("Seleccione");
+        alertDialog.setCancelable(false);
         alertDialog.setMessage("Seleccione el modo para capturar datos");
         alertDialog.setPositiveButton("Manual", new DialogInterface.OnClickListener() {
             @Override
@@ -78,6 +82,7 @@ public class MainActivity extends AppCompatActivity {
         rotate45();
         posiciones.setText("Posicion " + grades + " grados");
         intensidades[posicion] = dbm();
+        intensidades2.add(posicion, dbm());
 
         //TODO metodo para guardar valores
 
@@ -88,8 +93,9 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         sleep(2200);
                         Intent intent = new Intent(MainActivity.this, MeterActivity.class);
-                        intent.putExtra("intensidades", intensidades);
+                        intent.putExtra("intensidades", intensidades2);
                         startActivity(intent);
+                        MainActivity.this.finish();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -163,6 +169,7 @@ public class MainActivity extends AppCompatActivity {
                     rotate45();
                     posiciones.setText("Posicion " + grades + " grados");
                     intensidades[posicion] = dbm();
+                    intensidades2.add(posicion, dbm());
 
 
                 } catch (Exception e) {
@@ -176,10 +183,10 @@ public class MainActivity extends AppCompatActivity {
                 Thread thread = new Thread() {
                     public void run() {
                         try {
-                            sleep(2200);
                             Intent intent = new Intent(MainActivity.this, MeterActivity.class);
-                            intent.putExtra("intensidades", intensidades);
+                            intent.putExtra("intensidades", intensidades2);
                             startActivity(intent);
+                            MainActivity.this.finish();
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -267,6 +274,7 @@ public class MainActivity extends AppCompatActivity {
         changeDelayImg();
 
         intensidades[posicion] = dbm();
+        intensidades2.add(posicion, dbm());
         Toast.makeText(this, String.valueOf(dbm()), Toast.LENGTH_SHORT).show();
         posicion += 1;
     }
@@ -276,7 +284,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         checkNetwork();
+        intensidades2.clear();
     }
 
-
+    @Override
+    protected void onPause() {
+        super.onPause();
+    }
 }

@@ -1,6 +1,7 @@
 package com.udb.moviles.signalmeter;
 
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -25,13 +26,13 @@ public class MeterActivity extends AppCompatActivity {
         radarChart = (RadarChart) findViewById(R.id.chart);
 
 
-        double datos[] = getIntent().getDoubleArrayExtra("intensidades");
+        ArrayList<Integer> datos = getIntent().getIntegerArrayListExtra("intensidades");
 
         ArrayList<RadarEntry> entries = new ArrayList<>();
         ArrayList<String> labels = new ArrayList<>();
 
-        for (int i = 0; i < datos.length; i++) {
-            entries.add(new RadarEntry((float) datos[i]));
+        for (int i = 0; i < datos.size(); i++) {
+            entries.add(new RadarEntry((float) datos.get(i)));
             labels.add(String.valueOf(grade));
             grade += 45;
         }
@@ -52,5 +53,11 @@ public class MeterActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    public void onBackPressed() {
+        Intent intent = new Intent(MeterActivity.this,MainActivity.class);
+        startActivity(intent);
+        super.onBackPressed();
 
+    }
 }
