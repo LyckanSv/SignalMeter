@@ -31,7 +31,7 @@ public class MeterActivity extends AppCompatActivity {
         ArrayList<String> labels = new ArrayList<>();
 
         for (int i = 0; i < datos.length; i++) {
-            entries.add(new RadarEntry((float) datos[i], i));
+            entries.add(new RadarEntry((float) datos[i]));
             labels.add(String.valueOf(grade));
             grade += 45;
         }
@@ -43,6 +43,7 @@ public class MeterActivity extends AppCompatActivity {
 
 
         RadarData data = new RadarData(dataset_comp1);
+        data.setLabels(labels);
         Description description = new Description();
         description.setText("Espectro de WiFi");
         radarChart.setDescription(description);
