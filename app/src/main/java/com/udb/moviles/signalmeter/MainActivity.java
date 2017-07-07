@@ -28,15 +28,19 @@ import android.widget.Toast;
 import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
 
-import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
-    TextView posiciones;
-    ImageView routerImg;
+
+
+    /**
+     * Para iniciar se utilizarán principalmente 3 variables
+     */
     int grades = 0;
     int posicion = 0;
     double intensidades[] = new double[8];
-    ArrayList<Integer> intensidades2 = new ArrayList<>();
+
+    TextView posiciones;
+    ImageView routerImg;
     Button manualButton;
     Button mainButton;
     Button autoButton;
@@ -78,22 +82,29 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+
+    /**
+     * Para proceder a obtener los valores siguientes en el modo manual se
+     * habilita un nuevo botón, responde de la siguiente manera al hacer click:
+     * se tiene condicion if, donde se evalúa la cantidad de grados recorridos y si esta es
+     * igual o mayor a 315° se procede a hacer una última rotación en la imagen y luego a abrir la actividad que
+     * desplegara el grafico, si los grados son menores a 315° se procede a sumar 1 en la variable posición para poder
+     * agregar un valor más dentro del arreglo intensidades.
+     **/
     public void manualCapture(View view) {
         rotate45();
         posiciones.setText("Posicion " + grades + " grados");
         intensidades[posicion] = dbm();
-        intensidades2.add(posicion, dbm());
-
-        //TODO metodo para guardar valores
 
         if (grades >= 315) {
+            manualButton.setEnabled(false);
             rotate45();
             Thread thread = new Thread() {
                 public void run() {
                     try {
                         sleep(2200);
                         Intent intent = new Intent(MainActivity.this, MeterActivity.class);
-                        intent.putExtra("intensidades", intensidades2);
+                        intent.putExtra("intensidades", intensidades);
                         startActivity(intent);
                         MainActivity.this.finish();
                     } catch (Exception e) {
@@ -110,6 +121,12 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+
+    /**
+     * Método personalizado llamado rotate45();
+     * que tal como su nombre indica rota una imagen en la interfaz 45° en
+     * dirección de las agujas del reloj
+     */
     public void rotate45() {
         grades += 45;
         routerImg.animate().rotation(grades).setDuration(500);
@@ -136,15 +153,21 @@ public class MainActivity extends AppCompatActivity {
         thread.start();
     }
 
-
+    /***dbm(); es un método que regresara un entero que representa el nivel de intensidad
+     * del 0 al 100 de la señal de inalámbrica en determinado momento  */
     public int dbm() {
         WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
         if (wifiManager.isWifiEnabled()) {
             WifiInfo wifiInfo = wifiManager.getConnectionInfo();
             if (wifiInfo != null) {
                 manualButton.setEnabled(true);
+
+                /*Al utilizar el método calculateSignalLevel(), necesitamos ingresar 2 parámetros siendo el
+                  primero El RSSI (Received signal strength indication) y el segundo los niveles que deseamos obtener,
+                  normalmente se definen 5 pero en nuestro caso para graficar solicitaremos 100 niveles).*
+                  */
                 int strengthInPercentage = WifiManager.calculateSignalLevel(wifiInfo.getRssi(), 100);
-                Toast.makeText(this, String.valueOf(strengthInPercentage), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Valor capturado: " + String.valueOf(strengthInPercentage), Toast.LENGTH_SHORT).show();
                 return strengthInPercentage;
 
             } else {
@@ -160,16 +183,31 @@ public class MainActivity extends AppCompatActivity {
         autoCapture();
     }
 
+
+    /**
+     * El modo automático de la aplicación funciona de manera similar al modo manual:
+     * la captura de datos se hace con las mismas variables, sin embargo en este caso se
+     * ha creado un método personalizado llamado autoCapture();
+     * Este método contiene un elemento nuevo llamado CountDownTimer(),
+     * que nos permitirá repetir una tarea cada cierto intervalo de tiempo, para que esto sea posible es necesario ingresar
+     * 2 parámetros de tipo long, el primero será la cantidad  total en milisegundos que se ejecutara la tarea,
+     * y el segundo parámetro será el intervalo en milisegundos que se tomara para repetir la tarea.
+     * En nuestro caso ingresaremos el primer parámetro como 45000 (45 segundos) y el segundo parámetro será 5,
+     * tomaremos en cuenta que la primer repetición iniciara a los 5 segundos por lo que en total tendremos
+     * 8 repeticiones para cubrir los 360° y generar el grafico.
+     * Utilizando el método onTick() almacenaremos el valor obtenido en ese momento dentro del arreglo intensidades
+     * y luego al finalizar, se ejecutara el método onFinish() que ejecutara el código para abrir una actividad nueva que generara el grafico.
+     */
     private void autoCapture() {
+        autoButton.setEnabled(false);
         new CountDownTimer(45000, 5000) {
             @Override
             public void onTick(long l) {
                 try {
 
                     rotate45();
-                    posiciones.setText("Posicion " + grades + " grados");
+                    posiciones.setText("Camine alrededor del router, cada 5 segundos se hara una medicion para graficarla");
                     intensidades[posicion] = dbm();
-                    intensidades2.add(posicion, dbm());
 
 
                 } catch (Exception e) {
@@ -184,7 +222,7 @@ public class MainActivity extends AppCompatActivity {
                     public void run() {
                         try {
                             Intent intent = new Intent(MainActivity.this, MeterActivity.class);
-                            intent.putExtra("intensidades", intensidades2);
+                            intent.putExtra("intensidades", intensidades);
                             startActivity(intent);
                             MainActivity.this.finish();
                         } catch (Exception e) {
@@ -198,10 +236,21 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+
+    /**
+     * Al iniciar la aplicación y en cada momento que esta ventana sea visible,
+     * será necesario verificar si tenemos acceso al servicio de conexión inalámbrica de Android,
+     * para ello se ha creado un método llamado checkNetwork(), que contiene los elementos: ConnectivityManager con el cual solicitamos
+     * acceso al servicio de conectividad y luego con NetworkInfo obtenemos la informacion relativa a la red,
+     * en específico a la red inalámbrica.
+     */
     private void checkNetwork() {
         ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo mWifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 
+
+        /*Luego se realiza una comprobación para verificar si la conexión inalámbrica se encuentra habilitada y
+           en caso de no ser así se le solicita al usuario por medio de un cuadro de dialogo que la habilite **/
         if (mWifi.isConnected()) {
             mainButton.setEnabled(true);
         } else {
@@ -215,6 +264,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+    /**
+     * Si se detecta que el WiFi está habilitado se procede a animar la interfaz por medio del metodo personalizado prepareLayouts()
+     * que muestra una ventana de dialogo en la que le solicita al usuario que seleccione el tipo de medición (automática o manual)
+     * y a partir de esto mostrar los botones para iniciar la captura de datos, además que se realiza la primer captura de datos
+     * por medio de: intensidades[0] = dbm();
+     **/
     private void prepareLayouts(int selection) {
 
         YoYo.with(Techniques.FadeOutDown)
@@ -274,8 +330,6 @@ public class MainActivity extends AppCompatActivity {
         changeDelayImg();
 
         intensidades[posicion] = dbm();
-        intensidades2.add(posicion, dbm());
-        Toast.makeText(this, String.valueOf(dbm()), Toast.LENGTH_SHORT).show();
         posicion += 1;
     }
 
@@ -284,11 +338,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         checkNetwork();
-        intensidades2.clear();
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-    }
+
 }
