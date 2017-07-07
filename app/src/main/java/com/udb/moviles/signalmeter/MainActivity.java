@@ -29,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
     TextView posiciones;
     ImageView routerImg;
     int grades = 0;
-    int posicion = 1;
+    int posicion = 0;
     double intensidades[] = new double[8];
     Button button2;
 
@@ -94,8 +94,9 @@ public class MainActivity extends AppCompatActivity {
             rotate720();
             changeDelayImg();
 
-            intensidades[0] = dbm();
+            intensidades[posicion] = dbm();
             Toast.makeText(this, String.valueOf(dbm()), Toast.LENGTH_SHORT).show();
+            posicion += 1;
 
         } else {
 
