@@ -18,6 +18,7 @@ public class DialogoConfirmacion extends DialogFragment {
 
         builder.setMessage("¿Desea configurar una red wifi?")
                 .setTitle("Configuracion")
+                .setCancelable(false)
                 .setPositiveButton("Aceptar", new DialogInterface.OnClickListener()  {
                     public void onClick(DialogInterface dialog, int id) {
                         startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));
